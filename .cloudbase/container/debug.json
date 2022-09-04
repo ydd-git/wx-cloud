@@ -2,9 +2,9 @@
   "containers": [
     {
       "name": "wx-cloud",
-      "containerId": "304e6c84c8d05e171ffd9ae143760f856e6788002445d3c8078e71f6677053cc",
       "domain": "",
-      "ip": ""
+      "ip": "",
+      "mode": "compose"
     }
   ],
   "config": {
