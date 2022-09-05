@@ -1,16 +1,18 @@
-  {
-    "name": "cloudbase-push",
-    "version": "1.0.0",
-    "description": "call push server",
-    "main": "index.js",
-    "scripts": {
-      "start": "node index.js"
-    },
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-      "express": "^4.16.4",
-      "request": "^2.88.2"
-    }
+{
+  "name": "cloudbase-push",
+  "version": "1.0.0",
+  "description": "call push server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "express": "^4.16.4",
+    "moment": "^2.29.4",
+    "node-schedule": "^2.1.0",
+    "wechat-api": "^1.35.1"
   }
-  
+}

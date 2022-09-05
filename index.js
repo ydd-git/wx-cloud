@@ -1,94 +1,117 @@
-const express = require('express')
-const bodyParser = require('body-parser')
+const wechatAPI = require("wechat-api");
+const moment = require("moment");
+const { Config, Message, Weather, daliySoup } = require("./config");
+const {
+  fetchWeather,
+  calBrithDay,
+  fetchDaliySoup,
+  fetchDaliySoupEn,
+} = require("./task");
 
-const PORT = process.env.PORT || 80
+const api = new wechatAPI(Config.appid, Config.appsercret);
 
-const app = express()
+const sendMessage = async function () {
+  const openid = Config.openid;
+  const templateId = Config.templateId;
+  const time = moment().locale("zh-cn").format("LLLL");
+  const url = "http://weixin.qq.com/download";
 
-app.use(bodyParser.raw())
-app.use(bodyParser.json({}))
-app.use(bodyParser.urlencoded({ extended: true }))
-
-app.all('/', async (req, res) => {
-  console.log('消息推送', req.body)
-  const { ToUserName, FromUserName, MsgType, Content, CreateTime } = req.body
-  if (MsgType === 'text') {
-    if (Content === '回复文字') {
-      res.send({
-        ToUserName: FromUserName,
-        FromUserName: ToUserName,
-        CreateTime: CreateTime,
-        MsgType: 'text',
-        Content: '这是回复的消息'
-      })
-    } else if (Content === '回复图片') {
-      res.send({
-        ToUserName: FromUserName,
-        FromUserName: ToUserName,
-        CreateTime: CreateTime,
-        MsgType: 'image',
-        Image: {
-          MediaId: 'P-hoCzCgrhBsrvBZIZT3jx1M08WeCCHf-th05M4nac9TQO8XmJc5uc0VloZF7XKI'
-        }
-      })
-    } else if (Content === '回复语音') {
-      res.send({
-        ToUserName: FromUserName,
-        FromUserName: ToUserName,
-        CreateTime: CreateTime,
-        MsgType: 'voice',
-        Voice: {
-          MediaId: '06JVovlqL4v3DJSQTwas1QPIS-nlBlnEFF-rdu03k0dA9a_z6hqel3SCvoYrPZzp'
-        }
-      })
-    } else if (Content === '回复视频') {
-      res.send({
-        ToUserName: FromUserName,
-        FromUserName: ToUserName,
-        CreateTime: CreateTime,
-        MsgType: 'video',
-        Video: {
-          MediaId: 'XrfwjfAMf820PzHu9s5GYsvb3etWmR6sC6tTH2H1b3VPRDedW-4igtt6jqYSBxJ2',
-          Title: '微信云托管官方教程',
-          Description: '微信官方团队打造，贴近业务场景的实战教学'
-        }
-      })
-    } else if (Content === '回复音乐') {
-      res.send({
-        ToUserName: FromUserName,
-        FromUserName: ToUserName,
-        CreateTime: CreateTime,
-        MsgType: 'music',
-        Music: {
-          Title: 'Relax｜今日推荐音乐',
-          Description: '每日推荐一个好听的音乐，感谢收听～',
-          MusicUrl: 'https://c.y.qq.com/base/fcgi-bin/u?__=0zVuus4U',
-          HQMusicUrl: 'https://c.y.qq.com/base/fcgi-bin/u?__=0zVuus4U',
-          ThumbMediaId: 'XrfwjfAMf820PzHu9s5GYgOJbfbnoUucToD7A5HFbBM6_nU6TzR4EGkCFTTHLo0t'
-        }
-      })
-    } else if (Content === '回复图文') {
-      res.send({
-        ToUserName: FromUserName,
-        FromUserName: ToUserName,
-        CreateTime: CreateTime,
-        MsgType: 'news',
-        ArticleCount: 1,
-        Articles: [{
-          Title: 'Relax｜今日推荐音乐',
-          Description: '每日推荐一个好听的音乐，感谢收听～',
-          PicUrl: 'https://y.qq.com/music/photo_new/T002R300x300M000004NEn9X0y2W3u_1.jpg?max_age=2592000',
-          Url: 'https://c.y.qq.com/base/fcgi-bin/u?__=0zVuus4U'
-        }]
-      })
+  let daliySoup = await fetchDaliySoup();
+  let daliySoupEn = await fetchDaliySoupEn();
+  const { city, wea, tem1, tem2, humidity, win_speed } = await fetchWeather();
+  const data = {
+    first: {
+      value: time,
+      color: "#60AEF2",
+    },
+    city: {
+      value: city,
+      color: "#60AEF2",
+    },
+    weather: {
+      value: wea,
+      color: "#b28d0a",
+    },
+    maxTemperature: {
+      value: tem1,
+      color: "#dc1010",
+    },
+    minTemperature: {
+      value: tem2,
+      color: "#0ace3c",
+    },
+    windSpeed: {
+      value: win_speed,
+      color: "#6e6e6e",
+    },
+    wet: {
+      value: humidity,
+      color: "#1f95c5",
+    },
+    togetherDate: {
+      value: moment().diff(moment(Message.togetherDate), "days") + "天",
+      color: "#FEABB5",
+    },
+    birthDate1: {
+      value: calBrithDay(Message.birthday1) + "天",
+    },
+    birthDate2: {
+      value: calBrithDay(Message.birthday2) + "天",
+    },
+    daliySoup: {
+      value: daliySoup,
+      color: "#b28d0a",
+    },
+    noteEn: {
+      value: daliySoupEn.en,
+      color: "#879191",
+    },
+    noteZh: {
+      value: daliySoupEn.zh,
+      color: "#879191",
+    },
+  };
+  api.sendTemplate(openid, templateId, url, data, function (err, result) {
+    if (err) {
+      console.log("err");
     } else {
-      res.send('success')
+      console.log(result);
     }
-  } else {
-    res.send('success')
-  }
-})
+  });
+};
 
-app.listen(PORT, function () {
-  console.log(`运行成功，端口：${PORT}`)
+// * * * * * *
+// ┬ ┬ ┬ ┬ ┬ ┬
+// │ │ │ │ │ |
+// │ │ │ │ │ └ day of week (0 - 7) (0 or 7 is Sun)
+// │ │ │ │ └───── month (1 - 12)
+// │ │ │ └────────── day of month (1 - 31)
+// │ │ └─────────────── hour (0 - 23)
+// │ └──────────────────── minute (0 - 59)
+// └───────────────────────── second (0 - 59, OPTIONAL)
+
+const schedule = require("node-schedule");
+const scheduleCronstyle = () => {
+  schedule.scheduleJob("00 30 7 * * *", () => {
+    console.log("scheduleCronstyle:" + new Date());
+    sendMessage();
+  });
+};
+
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("欢迎使用微信云托管！");
+});
+
+app.get("/send", (req, res) => {
+  sendMessage();
+});
+
+const port = process.env.PORT || 80
+app.listen(port, () => {
+  // scheduleCronstyle();
+  sendMessage();
+  console.log('服务启动成功，端口：', port)
 })
