@@ -73,7 +73,7 @@ const sendMessage = async function () {
   };
   api.sendTemplate(openid, templateId, url, data, function (err, result) {
     if (err) {
-      console.log("err");
+      console.log("err", err);
     } else {
       console.log(result);
     }
